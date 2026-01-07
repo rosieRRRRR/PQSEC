@@ -1,11 +1,11 @@
 # PQSEC – Post-Quantum Security and Enforcement Core
 
 * **Specification Version:** 2.0.1
-* **Status:** ACTIVE
+* **Status:** Public beta
 * **Date:** 2026
 * **Author:** rosiea
 * **Contact:** [PQRosie@proton.me](mailto:PQRosie@proton.me)
-* **Licence:** Apache License 2.0 — Copyright 2025 rosiea
+* **Licence:** Apache License 2.0 — Copyright 2026 rosiea
 
 ---
 
