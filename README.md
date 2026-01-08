@@ -1220,51 +1220,120 @@ lockout_count: uint
 
 ## 30. Supply Chain Predicate Enforcement
 
-### 30.1 Supply Chain Predicate Set
+### 30.1 Scope and Non-Implicit Trust Rule (Normative)
 
-PQSEC MUST evaluate supply-chain predicates when a component claims
-supply-chain hardening.
+Supply-chain enforcement in PQSEC is **explicit, opt-in, and policy-bound**.
+
+1. PQSEC MUST evaluate supply-chain predicates **only** when they are explicitly required by the active enforcement configuration or policy.
+2. Absence of a supply-chain predicate requirement MUST NOT be interpreted as trust.
+3. No component, artefact, or deployment is considered supply-chain-verified by default.
+4. Supply-chain artefacts grant no authority and convey no permission by presence alone.
+
+Any implementation that assumes supply-chain integrity without explicit predicate requirements is non-conformant.
+
+---
+
+### 30.2 Supply Chain Predicate Set
+
+When supply-chain enforcement is required, PQSEC evaluates the following predicates:
 
 ```
-
 valid_build_provenance
 valid_runtime_signature
 valid_publish_signature
 valid_delegation
 valid_operation_key
 valid_audit_chain
-
 ```
 
-### 30.2 Supply Chain Gating Rules
+Each predicate is refusal-only and MUST NOT grant authority independently.
 
-**Authoritative operations involving external components**
+---
+
+### 30.3 Predicate Semantics (Normative)
+
+**valid_build_provenance**
+Indicates that a BuildAttestation or equivalent provenance artefact is present, canonical, signature-verified, time-valid, and satisfies any reproducibility or verification requirements defined by policy.
+
+**valid_runtime_signature**
+Indicates that the executing component presents a valid RuntimeSignature bound to the deployed artefact, configuration, and environment.
+
+**valid_publish_signature**
+Indicates that the artefact being installed, updated, or executed is signed by an authorised publish key and matches its declared content hash.
+
+**valid_delegation**
+Indicates that any DelegationCertificate used for build, deploy, or publish operations is present, within scope, unexpired, unrevoked, and cryptographically valid.
+
+**valid_operation_key**
+Indicates that a required OperationKey is present, single-use, unexpired, and bound to the declared operation type.
+
+**valid_audit_chain**
+Indicates that required audit artefacts or ledger continuity evidence validate successfully under policy.
+
+Failure of any required supply-chain predicate MUST evaluate to false.
+
+---
+
+### 30.4 Gating Rules
+
+#### 30.4.1 Authoritative Operations Involving External Components
+
+When supply-chain enforcement is required for an Authoritative operation:
 
 1. valid_runtime_signature MUST evaluate to true.
-2. valid_build_provenance SHOULD evaluate to true and MAY be required by
-   policy.
-3. If delegated deployment is used:
-   * valid_delegation MUST be true.
+2. valid_publish_signature MUST evaluate to true.
+3. valid_operation_key MUST evaluate to true when the operation is build-, deploy-, or publish-scoped.
+4. valid_build_provenance SHOULD evaluate to true and MAY be REQUIRED by policy.
+5. If delegated execution is used:
+
+   * valid_delegation MUST evaluate to true.
    * Delegation scope MUST include the operation type.
 
-**Component updates**
+Failure of any required predicate MUST deny the operation.
+
+---
+
+#### 30.4.2 Component Installation, Update, or Replacement
+
+For component installation, update, or replacement:
 
 1. valid_publish_signature MUST evaluate to true.
-2. If a reproducibility claim is asserted, independent verification
-   SHOULD be obtained before deployment.
+2. valid_operation_key MUST evaluate to true when policy requires operation-scoped keys.
+3. If a reproducibility claim is asserted:
 
-### 30.3 Supply Chain Failure Response
+   * valid_build_provenance MUST evaluate to true.
+   * Independent verification MAY be REQUIRED by policy prior to acceptance.
 
-1. Supply-chain predicate failure MUST deny Authoritative operations.
-2. Supply-chain validation failures MUST increment
-   authoritative_failure_count.
-3. Repeated supply-chain failures MAY trigger FAIL_CLOSED_LOCKED.
+---
 
-### 30.4 Supply Chain Audit Integration
+### 30.5 Failure Response and Lockout Interaction (Normative)
 
-1. All supply-chain predicate outcomes MUST be logged.
-2. Failed validations MUST be recorded in the audit trail.
-3. Supply-chain audit events MAY be recorded in a ledger where enabled.
+1. Failure of any required supply-chain predicate MUST deny Authoritative operations.
+2. Supply-chain predicate failures MUST increment authoritative_failure_count.
+3. Repeated supply-chain validation failures MAY trigger FAIL_CLOSED_LOCKED according to lockout rules.
+4. Transport or availability errors MUST NOT be treated as supply-chain failures.
+
+---
+
+### 30.6 Audit and Evidence Handling
+
+1. All evaluated supply-chain predicate results MUST be recorded in the enforcement audit trail.
+2. Failed validations MUST be logged with deterministic error codes.
+3. Supply-chain audit events MAY be recorded in an append-only ledger where enabled.
+4. Audit records are descriptive only and MUST NOT be used as an authority signal.
+
+---
+
+### 30.7 Authority Boundary (Reinforcement)
+
+Supply-chain artefacts and predicates:
+
+1. Grant no authority.
+2. Do not imply trust.
+3. Do not permit execution.
+4. Influence decisions only through explicit PQSEC predicate evaluation.
+
+All enforcement outcomes remain exclusively produced by PQSEC.
 
 ---
 
