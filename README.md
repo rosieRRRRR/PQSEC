@@ -1,6 +1,6 @@
 # PQSEC – Post-Quantum Security and Enforcement Core
 
-* **Specification Version:** 2.0.1
+* **Specification Version:** 2.0.2
 * **Status:** Public beta
 * **Date:** 2026
 * **Author:** rosiea
@@ -20,28 +20,92 @@ PQSEC is the deterministic enforcement core of the PQ stack. It consolidates all
 ## Index
 
 1. [Summary](#summary)
-2. [Non-Normative Overview](#non-normative-overview--for-explanation-and-orientation-only)
-3. [Scope and Enforcement Boundary](#scope-and-enforcement-boundary)
-4. [Non-Goals and Authority Prohibition](#non-goals-and-authority-prohibition)
-5. [Threat Model](#threat-model)
-6. [Trust Assumptions](#trust-assumptions)
-7. [Architecture Overview](#architecture-overview)
-8. [Predicate Model](#predicate-model)
-9. [Predicate Evaluation Rules](#predicate-evaluation-rules)
-10. [EnforcementOutcome](#enforcementoutcome)
-11. [Refusal Semantics](#refusal-semantics)
-12. [Lockout and Escalation](#lockout-and-escalation)
-13. [Replay Protection](#replay-protection)
-14. [Time and Freshness Handling](#time-and-freshness-handling)
-15. [Session and Exporter Binding](#session-and-exporter-binding)
-16. [Audit and Ledger Interaction](#audit-and-ledger-interaction)
-17. [Error Codes](#error-codes)
-18. [Dependency Boundaries](#dependency-boundaries)
-19. [Failure Semantics](#failure-semantics)
-20. [Conformance](#conformance)
-21. [Security Considerations](#security-considerations)
-22. [Annexes](#annexes)
-23. [Changelog](#changelog)
+2. [Non-Normative Overview — For Explanation and Orientation Only](#non-normative-overview--for-explanation-and-orientation-only)
+
+3. [Scope and Authority](#1-scope-and-authority)
+4. [Non-Goals and Authority Boundary](#2-non-goals-and-authority-boundary)
+5. [Threat Model](#3-threat-model)
+6. [Trust Assumptions](#4-trust-assumptions)
+7. [Architecture Overview](#5-architecture-overview)
+8. [Explicit Dependencies](#5a-explicit-dependencies)
+9. [Conformance Keywords](#6-conformance-keywords)
+10. [Determinism and Fail Closed](#7-determinism-and-fail-closed)
+11. [Input Responsibility Contract](#8-input-responsibility-contract)
+12. [Ternary Predicate Results and UNAVAILABLE Semantics](#8a-ternary-predicate-results-and-unavailable-semantics-normative)
+13. [Schema Authority](#9-schema-authority)
+14. [Operation Authority Partitioning](#10-operation-authority-partitioning)
+15. [Independent Verification Scope](#11-independent-verification-scope)
+16. [Action Class Admission Control](#12-action-class-admission-control)
+17. [Canonical Encoding Enforcement](#13-canonical-encoding-enforcement)
+
+18. [Unified Predicate Set](#14-unified-predicate-set)
+   - [14.1 Temporal and Session Predicates](#141-temporal-and-session-predicates)
+   - [14.2 Consent and Policy Predicates](#142-consent-and-policy-predicates)
+   - [14.3 Runtime and Integrity Predicates](#143-runtime-and-integrity-predicates)
+   - [14.4 Authority and State Predicates](#144-authority-and-state-predicates)
+   - [14.5 Identity and Profile Predicates](#145-identity-and-profile-predicates)
+   - [14.6 Privacy Predicates](#146-privacy-predicates)
+   - [14.7 Evaluation Semantics](#147-evaluation-semantics)
+   - [14.8 Privacy and Optional Evidence Predicate Semantics](#148-privacy-and-optional-evidence-predicate-semantics-normative)
+     - [14.8.1 Privacy Predicate Semantics](#1481-privacy-predicate-semantics)
+     - [14.8.2 Preflight Interaction Predicates](#1482-preflight-interaction-predicates)
+     - [14.8.3 Presence Evidence Predicate](#1483-presence-evidence-predicate)
+     - [14.8.4 Delegation Evidence Predicate](#1484-delegation-evidence-predicate)
+   - [14.9 Predicate Evaluation Examples](#149-predicate-evaluation-examples)
+
+19. [EnforcementOutcome Artefact](#15-enforcementoutcome-artefact)
+20. [Structural Invalidation of Override Attempts](#16-structural-invalidation-of-override-attempts)
+21. [Custody Predicate Integration](#17-custody-predicate-integration)
+22. [Temporal Freshness and Monotonicity](#18-temporal-freshness-and-monotonicity)
+23. [Session Binding](#19-session-binding)
+24. [Consent Consumption](#20-consent-consumption)
+25. [Policy Consumption and Immutability](#21-policy-consumption-and-immutability)
+26. [Runtime Attestation Consumption](#22-runtime-attestation-consumption)
+27. [SafePrompt Consumption](#23-safeprompt-consumption)
+28. [Ledger Continuity Enforcement](#24-ledger-continuity-enforcement)
+29. [Lockout and Backoff](#25-lockout-and-backoff)
+30. [Predicate Dependency Graph and Evaluation Ordering](#26-predicate-dependency-graph-and-evaluation-ordering)
+31. [Transport Security Requirements](#27-transport-security-requirements)
+32. [Error Surface Discipline](#28-error-surface-discipline)
+33. [Predicate Evaluation Context](#29-predicate-evaluation-context)
+34. [Supply Chain Predicate Enforcement](#30-supply-chain-predicate-enforcement)
+35. [Failure Semantics](#31-failure-semantics)
+36. [Conformance Checklist](#32-conformance-checklist)
+37. [Mandatory Test Vectors](#33-mandatory-test-vectors)
+38. [Reference Implementations and Verification](#34-reference-implementations-and-verification)
+39. [Explicit Dependencies](#35-explicit-dependencies)
+40. [Security Considerations](#36-security-considerations)
+
+41. [Annexes](#annexes)
+   - [Annex A — Reference Evaluation Order](#annex-a--reference-evaluation-order-non-normative)
+   - [Annex B — Replay Guard Reference Logic](#annex-b--replay-guard-reference-logic-reference)
+   - [Annex C — Lockout State Machine](#annex-c--lockout-state-machine-reference)
+   - [Annex D — AdmissionContext Schema](#annex-d--admissioncontext-schema-reference)
+   - [Annex E — PredicateResult Schema](#annex-e--predicateresult-schema-reference)
+   - [Annex F — Predicate Evaluation Flow](#annex-f--predicate-evaluation-flow-reference)
+   - [Annex G — Bootstrap Mode State Machine](#annex-g--bootstrap-mode-state-machine-reference)
+   - [Annex H — Action Class Escalation Logic](#annex-h--action-class-escalation-logic-reference)
+   - [Annex I — Behavioural Admissibility Rules](#annex-i--behavioural-admissibility-rules-bar-evaluation-reference)
+   - [Annex J — Additional Custody Predicates](#annex-j--additional-custody-predicates-normative)
+   - [Annex K — Privacy Policy Enforcement](#annex-k--privacy-policy-enforcement-reference)
+   - [Annex L — Tick Freshness and Monotonicity Validation](#annex-l--tick-freshness-and-monotonicity-validation-reference)
+   - [Annex M — Attestation Validation and Drift Handling](#annex-m--attestation-validation-and-drift-handling-reference)
+   - [Annex N — Ledger Continuity Validation](#annex-n--ledger-continuity-validation-reference)
+   - [Annex O — Policy Rollback Detection](#annex-o--policy-rollback-detection-reference)
+   - [Annex P — Consent Validation and Expiry](#annex-p--consent-validation-and-expiry-reference)
+   - [Annex Q — Session and Exporter Validation](#annex-q--session-and-exporter-validation-reference)
+   - [Annex R — EnforcementOutcome Production (Reference)](#annex-r--enforcementoutcome-production-reference)
+   - [Annex RS — Session Resumption Enforcement (Normative, Optional)](#annex-rs--session-resumption-enforcement-normative-optional)
+   - [Annex S — Complete Evaluation Flow Example](#annex-s--complete-evaluation-flow-example-reference)
+   - [Annex T — Performance Monitoring and Budget Enforcement](#annex-t--performance-monitoring-and-budget-enforcement-reference)
+   - [Annex U — Integration Test Scenarios](#annex-u--integration-test-scenarios-reference)
+   - [Annex V — Deployment Checklist](#annex-v--deployment-checklist-reference)
+   - [Annex W — Operational Metrics and Monitoring](#annex-w--operational-metrics-and-monitoring-reference)
+   - [Annex X — Migration Guide](#annex-x--migration-guide-consolidating-enforcement-into-pqsec-reference)
+   - [Annex Y — FAQ for Implementers](#annex-y--faq-for-implementers-reference)
+
+42. [Changelog](#changelog)
+43. [Acknowledgements](#37-acknowledgements)
 
 ---
 
@@ -102,11 +166,11 @@ PQSEC is the sole normative enforcement authority for:
 **Consolidation Mandate:**
 All enforcement, gating, refusal, freshness, monotonicity, escalation, attestation consumption, lockout logic, and enforcement outcome production MUST be implemented within PQSEC.
 
-Any parallel enforcement logic outside PQSEC after adoption is non conformant and creates security bypass vectors.
+Any parallel enforcement logic outside PQSEC after adoption is non-conformant and creates security bypass vectors.
 
 ---
 
-## 2. Non Goals and Authority Boundary
+## 2. Non-Goals and Authority Boundary
 
 PQSEC does not define:
 
@@ -514,20 +578,30 @@ PQSEC evaluates predicates including but not limited to the following.
 7. Predicate evaluation order MUST follow the configured dependency
    graph and reference ordering defined by this specification.
 
-### 14.8 Privacy Predicate Semantics
+### 14.8 Privacy and Optional Evidence Predicate Semantics (Normative)
+
+This section defines deterministic refusal semantics for privacy-related
+predicates and optional evidence predicates. PQSEC MUST NOT infer,
+synthesize, or assume requirements beyond those explicitly defined by
+active policy.
+
+---
+
+#### 14.8.1 Privacy Predicate Semantics
 
 Privacy predicate satisfaction is defined as deterministic refusal rules
-derived exclusively from the active privacy PolicyBundle. PQSEC MUST NOT
-infer, assume, or synthesize privacy requirements.
+derived exclusively from the active privacy PolicyBundle.
+
+PQSEC MUST NOT infer, assume, or synthesize privacy requirements.
 
 **Policy presence**
 
 1. If an operation requires a privacy policy, absence of an applicable
-   privacy PolicyBundle MUST set **valid_privacy_policy = false**.
+   privacy PolicyBundle MUST evaluate **valid_privacy_policy = false**.
 
 **Retention constraints**
 
-2. **valid_privacy_retention** MUST evaluate to true only if:
+2. **valid_privacy_retention** evaluates to TRUE only if:
    * the active privacy policy defines a retention rule applicable to the
      operation’s artefact class, and
    * the operation’s declared retention window does not exceed the
@@ -535,7 +609,7 @@ infer, assume, or synthesize privacy requirements.
 
 **Logging constraints**
 
-3. **valid_privacy_logging** MUST evaluate to true only if:
+3. **valid_privacy_logging** evaluates to TRUE only if:
    * the active privacy policy defines a logging rule applicable to the
      operation’s artefact class, and
    * the operation’s declared logging level is less than or equal to the
@@ -543,7 +617,7 @@ infer, assume, or synthesize privacy requirements.
 
 **Disclosure constraints**
 
-4. **valid_privacy_disclosure** MUST evaluate to true only if:
+4. **valid_privacy_disclosure** evaluates to TRUE only if:
    * the active privacy policy defines a disclosure rule applicable to
      the operation’s artefact class, and
    * the operation’s declared disclosure scope is less than or equal to
@@ -551,7 +625,7 @@ infer, assume, or synthesize privacy requirements.
 
 **Telemetry constraints**
 
-5. **valid_privacy_telemetry** MUST evaluate to true only if:
+5. **valid_privacy_telemetry** evaluates to TRUE only if:
    * the active privacy policy defines a telemetry rule applicable to the
      operation’s artefact class, and
    * the operation’s declared telemetry configuration satisfies the
@@ -562,7 +636,166 @@ infer, assume, or synthesize privacy requirements.
 
 6. If the active privacy policy does not define a required rule for an
    artefact class mandated by configuration, the corresponding privacy
-   predicate MUST evaluate to false.
+   predicate MUST evaluate to FALSE.
+
+---
+
+#### 14.8.2 Preflight Interaction Predicates
+
+##### 14.8.2.1 Predicates
+
+The following predicates are defined:
+
+* **valid_preflight_terms**
+* **valid_preflight_commitment**
+* **valid_preflight_bind**
+
+##### 14.8.2.2 Default Requirement Status
+
+Unless explicitly referenced by the active policy:
+
+* Preflight predicates MUST NOT be required.
+* Absence of preflight artefacts MUST evaluate to **UNAVAILABLE**.
+
+##### 14.8.2.3 Predicate Inputs
+
+* **valid_preflight_terms** is evaluated from:
+  * PreflightSessionTerms
+
+* **valid_preflight_commitment** is evaluated from:
+  * transcript_hash computed deterministically per PQSF Annex Y
+
+* **valid_preflight_bind** is evaluated from:
+  * one or two PreflightBindReceipt artefacts
+  * policies MAY require receipts from both parties A and B
+
+##### 14.8.2.4 Evaluation Rules
+
+**valid_preflight_terms** evaluates to TRUE only if:
+
+1. Preflight terms are present
+2. Canonical encoding is valid
+3. Signature verifies
+4. current_tick < expiry_tick
+5. terms_hash matches the canonical terms body
+
+Otherwise, the predicate MUST evaluate to **UNAVAILABLE**.
+
+---
+
+**valid_preflight_commitment** evaluates to TRUE only if:
+
+1. transcript_hash is present
+2. transcript_hash is computed deterministically per PQSF Annex Y
+3. transcript_hash matches the value referenced by PreflightBindReceipt
+   artefacts
+
+Otherwise, the predicate MUST evaluate to **UNAVAILABLE**.
+
+---
+
+**valid_preflight_bind** evaluates to TRUE only if:
+
+1. All required PreflightBindReceipt artefacts are present
+2. Canonical encoding is valid
+3. Signatures verify
+4. Referenced hashes match the bound artefacts
+5. exporter_hash matches the active session exporter when present
+
+Otherwise, the predicate MUST evaluate to **UNAVAILABLE**.
+
+##### 14.8.2.5 Enforcement Boundary
+
+Preflight predicates:
+
+* MUST NOT grant authority
+* MUST NOT bypass any other required predicate
+* MUST be evaluated only when explicitly required by policy
+
+---
+
+#### 14.8.3 Presence Evidence Predicate
+
+##### 14.8.3.1 Predicate
+
+* **valid_presence_proof**
+
+##### 14.8.3.2 Default Requirement Status
+
+Unless explicitly referenced by the active policy:
+
+* Presence evidence MUST NOT be required.
+* Absence of PresenceProof MUST evaluate to **UNAVAILABLE**.
+
+##### 14.8.3.3 Predicate Inputs
+
+* PresenceProof
+
+##### 14.8.3.4 Evaluation Rules
+
+**valid_presence_proof** evaluates to TRUE only if:
+
+1. PresenceProof is present
+2. Canonical encoding is valid
+3. Signature verifies
+4. current_tick < expiry_tick
+
+Otherwise, the predicate MUST evaluate to **UNAVAILABLE**.
+
+##### 14.8.3.5 Enforcement Boundary
+
+Presence predicates:
+
+* MUST NOT grant authority
+* MUST NOT bypass consent, policy, delegation, or time predicates
+* MUST be evaluated only when explicitly required by policy
+
+---
+
+#### 14.8.4 Delegation Evidence Predicate
+
+##### 14.8.4.1 Predicate
+
+* **valid_delegation_grant**
+
+##### 14.8.4.2 Default Requirement Status
+
+Unless explicitly referenced by the active policy:
+
+* Delegation evidence MUST NOT be required for any operation class.
+* Absence of delegation artefacts MUST evaluate to **UNAVAILABLE**.
+
+##### 14.8.4.3 Predicate Inputs
+
+The predicate is evaluated from:
+
+* DelegationGrant
+* optional DelegationRevocation
+* optional ConsentProof when consent_ref is present
+* optional session exporter evidence when exporter_hash is present
+
+##### 14.8.4.4 Evaluation Rules
+
+**valid_delegation_grant** evaluates to TRUE only if:
+
+1. DelegationGrant is present
+2. Canonical encoding is valid
+3. Signature verifies under the declared suite_profile
+4. issued_tick ≤ current_tick < expiry_tick
+5. scope is canonical (sorted and de-duplicated)
+6. No valid DelegationRevocation exists for delegation_id
+7. exporter_hash matches the active session exporter when present
+8. consent_ref validates when present and required by policy
+
+Otherwise, the predicate MUST evaluate to **UNAVAILABLE**.
+
+##### 14.8.4.5 Enforcement Boundary
+
+Delegation predicates:
+
+* MUST NOT grant authority
+* MUST NOT bypass consent, policy, time, runtime, or quorum predicates
+* MUST be evaluated only when explicitly required by policy
 
 ### 14.9 Predicate Evaluation Examples
 
@@ -850,6 +1083,8 @@ Absent explicit policy permission, time ambiguity MUST result in refusal for Non
 2. Exporter mismatch MUST invalidate the predicate and MUST deny
    Authoritative operations.
 3. Session identifiers MUST NOT be reused across distinct sessions.
+
+For rules governing the enforcement of session continuity and optional session resumption, see **Annex RS — Session Resumption Enforcement**.
 
 ---
 
@@ -1406,19 +1641,42 @@ Unverifiable conformance claims MUST be treated as non-conformant.
 ## 35. Explicit Dependencies
 
 PQSEC depends on producing specifications for artefact structure and
-semantics only.
+semantics only. PQSEC does not depend on external enforcement logic.
+All enforcement is consolidated within PQSEC.
 
 Minimum required versions:
 
-* Epoch Clock ≥ 2.1.1
-* PQSF ≥ 2.0.2
-* PQVL ≥ 1.0.3
-* PQAI ≥ 1.1.1
-* PQHD ≥ 1.1.0
+* **Epoch Clock ≥ 2.1.1**  
+  Provides verifiable time artefacts, monotonicity guarantees, and
+  freshness semantics. All Authoritative operations depend on valid
+  Epoch Clock ticks.
 
-If a required dependency is unavailable or unverifiable, PQSEC MUST deny
-any operation requiring that dependency unless policy explicitly
-permits absence for Non Authoritative operations.
+* **PQSF — Post-Quantum Security Framework ≥ 2.0.2**  
+  Provides canonical encoding rules, cryptographic suite indirection,
+  deterministic artefact grammars, and evidence-only protocol
+  primitives.
+
+  When corresponding predicates are enabled by policy or enforcement
+  configuration, PQSEC consumes the following PQSF annexes:
+
+  * **Annex W** — Site Policy Overlay  
+    (policy discovery and policy key evidence)
+
+  * **Annex X** — Transport and Session Binding Overlay  
+    (exporter-bound session evidence)
+
+  * **Annex Y** — Preflight Interaction Binding  
+    (preflight terms, transcript commitments, and bind receipts)
+
+  * **Annex Z** — Optional Presence and Liveness Evidence  
+    (PresenceProof artefacts)
+
+  * **Annex AA** — Governance Metadata Artefact  
+    (descriptive governance evidence)
+
+  * **Annex AB** — Delegation Evidence Artefacts  
+    (DelegationGrant and DelegationRevocation)
+
 
 ---
 
@@ -2651,18 +2909,256 @@ This FAQ is informative only. In case of conflict, the main body of the
 PQSEC specification and normative annexes take precedence.
 
 ---
+# Annex RS — Session Resumption Enforcement (Normative, Optional)
 
-Changelog
-Version 2.0.1 (Current)
-Consolidated Enforcement: Established as the single, deterministic authority for all security gating, refusal logic, and predicate evaluation across the stack.
+**Status:** OPTIONAL  
+**Scope:** Session resumption enforcement  
+**Authority:** Refusal-only (predicate evaluation)
 
-UDC Integration: Formally absorbed the enforcement principles of the retired User-Defined Control (UDC) specification.
+---
 
-Lockout State Machine: Defined the formal FAIL_CLOSED_LOCKED entry and exit conditions based on authoritative validation failures.
+## R.1 Purpose and Scope
 
-Outcome Auditability: Introduced mandatory EnforcementOutcome logging requirements to ensure a deterministic audit trail of all allowed or refused operations.
+This annex defines deterministic enforcement rules for session resumption
+using PQSF-defined session continuity artefacts, including those defined
+in **PQSF Annex X (Transport and Session Binding)**.
 
-Cross-Module Validation: Implemented the logic to consume and verify evidence produced by Epoch Clock, PQVL, and PQAI.
+This annex enables:
+
+- Reduced handshake overhead for subsequent connections
+- Preservation of cryptographic continuity across disconnections
+- Fail-closed behavior on any resumption ambiguity or failure
+
+This annex does **not** define:
+
+- transport protocols
+- cryptographic constructions
+- token formats
+- key derivation mechanisms
+- resumption lifetime policy
+
+All artefacts and cryptographic mechanisms are defined exclusively by
+producing specifications (for example, PQSF).
+
+This annex defines enforcement only.
+
+---
+
+## R.2 Authority Boundary (Normative)
+
+1. Session resumption evaluation MUST NOT grant authority.
+2. Successful session resumption MUST NOT imply permission for any operation.
+3. Failure of session resumption MUST NOT permit degraded execution.
+4. No construct in this annex may emit ALLOW semantics.
+5. Session resumption MAY influence enforcement outcomes only through
+   explicit predicate evaluation.
+
+---
+
+## R.3 Predicate: valid_session_resumption
+
+### R.3.1 Default Requirement Status
+
+Unless explicitly referenced by active policy:
+
+- valid_session_resumption MUST NOT be required for any operation class.
+- Absence of session resumption evidence MUST evaluate to **UNAVAILABLE**.
+
+---
+
+### R.3.2 Predicate Inputs
+
+The predicate is evaluated from externally produced artefacts only:
+
+- SessionBinding (previous session)
+- SessionBinding (current session)
+- Session resumption evidence artefact(s) as defined by PQSF
+- Current transport exporter_hash
+
+PQSEC MUST NOT generate, decrypt, derive, transform, or modify any
+session resumption artefact.
+
+---
+
+### R.3.3 Evaluation Rules
+
+**valid_session_resumption** evaluates to TRUE only if all of the
+following conditions hold:
+
+#### 1. Previous session validity
+
+- A previous SessionBinding is present.
+- Canonical encoding is valid.
+- Signature verification succeeds.
+- The session was not expired at the time of termination.
+
+#### 2. Current session validity
+
+- A current SessionBinding is present.
+- Canonical encoding is valid.
+- Signature verification succeeds.
+- issued_tick ≤ current_tick < expiry_tick.
+
+#### 3. Resumption evidence validity
+
+- Required resumption evidence artefact(s) are present.
+- Canonical encoding is valid.
+- Cryptographic verification succeeds under the declared suite_profile.
+- Evidence is not expired according to verified Epoch Clock ticks.
+
+#### 4. Session continuity binding
+
+- The previous SessionBinding exporter_hash is verifiably linked to the
+  current session exporter_hash via the resumption evidence.
+- The linkage is deterministic and reproducible.
+
+#### 5. Bound artefact persistence
+
+- All artefacts referenced by the previous SessionBinding remain valid.
+- No referenced artefact has been revoked.
+- No referenced artefact has expired.
+- No referenced policy or profile has changed incompatibly.
+
+If any condition fails:
+
+- Malformed or invalid evidence MUST evaluate to **FALSE**
+- Missing or unavailable evidence MUST evaluate to **UNAVAILABLE**
+
+---
+
+## R.4 Enforcement Semantics
+
+1. valid_session_resumption MUST be evaluated only when explicitly
+   required by active policy.
+2. Failure of valid_session_resumption MUST deny Authoritative operations.
+3. Failure MUST require full session re-establishment and full predicate
+   reevaluation.
+4. Session resumption MUST NOT bypass consent, policy, time, runtime,
+   quorum, or custody predicates.
+
+---
+
+## R.5 Failure Handling (Normative)
+
+On session resumption failure:
+
+1. Failure of session resumption MUST result in a terminal refusal of
+   the resumption attempt, requiring a transition to a standard
+   initialization state.
+2. A new session MUST be established from scratch.
+3. All predicates MUST be reevaluated.
+4. Previous SessionBinding artefacts MUST NOT be reused.
+
+Failure handling MUST be auditable.
+
+---
+
+## R.6 Error Surface (Normative)
+
+Session resumption failures SHOULD map to deterministic error codes,
+including but not limited to:
+
+- **E_RESUMPTION_EVIDENCE_INVALID**
+- **E_RESUMPTION_EVIDENCE_EXPIRED**
+- **E_RESUMPTION_EXPORTER_MISMATCH**
+- **E_RESUMPTION_BOUND_ARTEFACT_INVALID**
+- **E_RESUMPTION_POLICY_CHANGED**
+
+Error codes are descriptive only and MUST NOT imply recovery actions.
+
+---
+
+## R.7 Multi-Device Considerations (Informative)
+
+Where policies permit session resumption across devices:
+
+- Device identity and attestation MAY be required by policy.
+- Absence of required device evidence MUST evaluate to **UNAVAILABLE**.
+- PQSEC MUST NOT infer device trust.
+
+Multi-device coordination semantics are defined by producing
+specifications and policy, not by PQSEC.
+
+---
+
+## R.8 Conformance
+
+An implementation claiming conformance to this annex MUST:
+
+- Evaluate valid_session_resumption deterministically
+- Consume only externally produced artefacts
+- Fail closed on any resumption ambiguity
+- Require full re-authentication on resumption failure
+- Preserve auditability of resumption attempts
+
+This annex introduces no new mandatory requirements for PQSEC conformance
+unless explicitly enabled by policy.
+
+---
+
+## Changelog
+
+### Version 2.0.2 (Current)
+
+**Predicate Completeness**
+* Added normative enforcement predicates for:
+  * Preflight interaction evidence (PQSF Annex Y)
+  * Presence and liveness evidence (PQSF Annex Z)
+  * Delegation evidence artefacts (PQSF Annex AB)
+* Defined explicit default UNAVAILABLE semantics for optional evidence
+  predicates unless required by policy.
+
+**Privacy and Optional Evidence Semantics**
+* Refactored Section 14.8 to clearly separate:
+  * privacy predicates
+  * preflight interaction predicates
+  * presence evidence predicates
+  * delegation evidence predicates
+* Clarified enforcement boundaries for all optional evidence predicates,
+  ensuring they remain refusal-only and non-authoritative.
+
+**PQSF Integration**
+* Explicitly documented PQSF ≥ 2.0.2 as a dependency.
+* Enumerated consumed PQSF annexes (W, X, Y, Z, AA, AB) when corresponding
+  predicates are enabled.
+* Closed the PQSF ↔ PQSEC evidence–enforcement contract without introducing
+  cross-spec enforcement leakage.
+
+**Enforcement Model Stability**
+* No changes to core enforcement outcomes (ALLOW / DENY /
+  FAIL_CLOSED_LOCKED).
+* No changes to lockout, escalation, or failure semantics.
+* No changes to predicate evaluation ordering or dependency graph.
+
+**Compatibility**
+* Backwards compatible with PQSEC 2.0.1 for deployments not enabling
+  the newly defined predicates.
+* No breaking changes to existing predicate names or meanings.
+
+---
+
+### Version 2.0.1
+
+**Consolidated Enforcement**
+* Established PQSEC as the single, deterministic authority for all
+  security gating, refusal logic, and predicate evaluation across the
+  PQ stack.
+
+**UDC Integration**
+* Formally absorbed the enforcement principles of the retired
+  User-Defined Control (UDC) specification.
+
+**Lockout State Machine**
+* Defined formal FAIL_CLOSED_LOCKED entry and exit conditions based on
+  authoritative validation failures.
+
+**Outcome Auditability**
+* Introduced mandatory EnforcementOutcome logging requirements to ensure
+  a deterministic audit trail of all allowed or refused operations.
+
+**Cross-Module Validation**
+* Implemented logic to consume and verify evidence produced by Epoch
+  Clock, PQVL, and PQAI.
 
 ---
 
