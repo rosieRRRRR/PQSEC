@@ -9,11 +9,27 @@
 
 ---
 
-## Summary
+## Security and Threat Model (Informative)
 
-PQSEC is the deterministic enforcement core of the PQ stack. It consolidates all security gating, refusal logic, and predicate evaluation into a single authority, eliminating distributed enforcement bypass vectors. PQSEC does not grant authority—it only refuses when requirements are unmet. All operations are predicate-driven: time-bound, cryptographically verified, and canonically encoded. PQSEC enforces fail-closed semantics with no degraded modes, lockout on repeated validation failures, and comprehensive audit trails. This specification achieves deterministic, auditable enforcement across AI operations, Bitcoin custody, runtime integrity, and consent management.
+This repository includes standalone documents that describe the threat
+assumptions, security claims, and conformance requirements of PQSEC.
+These documents are descriptive and do not modify enforcement semantics
+defined in the specification.
 
-**Key Properties:** Deterministic refusal | Zero degraded modes | Single enforcement authority | Comprehensive predicate evaluation | Fail-closed lockout | Full audit trail
+- **Conformance requirements**: `CONFORMANCE.md`  
+  Mandatory checklist for claiming PQSEC conformance, including
+  determinism, fail-closed semantics, lockout behaviour, and evidence
+  handling.
+
+- **Threat Model**: `threat-model.md`  
+  Adversary goals, mitigations, and explicit non-goals.
+
+- **Security Claims**: `SECURITY.md`  
+  Evidence-based claims made by PQSEC and the conditions under which they hold.
+
+These documents are provided to support auditability, review, and system
+integration analysis. All normative enforcement behaviour is defined
+exclusively in `SPEC.md`.
 
 ---
 
@@ -53,59 +69,31 @@ PQSEC is the deterministic enforcement core of the PQ stack. It consolidates all
      - [14.8.4 Delegation Evidence Predicate](#1484-delegation-evidence-predicate)
    - [14.9 Predicate Evaluation Examples](#149-predicate-evaluation-examples)
 
-19. [EnforcementOutcome Artefact](#15-enforcementoutcome-artefact)
-20. [Structural Invalidation of Override Attempts](#16-structural-invalidation-of-override-attempts)
-21. [Custody Predicate Integration](#17-custody-predicate-integration)
-22. [Temporal Freshness and Monotonicity](#18-temporal-freshness-and-monotonicity)
-23. [Session Binding](#19-session-binding)
-24. [Consent Consumption](#20-consent-consumption)
-25. [Policy Consumption and Immutability](#21-policy-consumption-and-immutability)
-26. [Runtime Attestation Consumption](#22-runtime-attestation-consumption)
-27. [SafePrompt Consumption](#23-safeprompt-consumption)
-28. [Ledger Continuity Enforcement](#24-ledger-continuity-enforcement)
-29. [Lockout and Backoff](#25-lockout-and-backoff)
-30. [Predicate Dependency Graph and Evaluation Ordering](#26-predicate-dependency-graph-and-evaluation-ordering)
-31. [Transport Security Requirements](#27-transport-security-requirements)
-32. [Error Surface Discipline](#28-error-surface-discipline)
-33. [Predicate Evaluation Context](#29-predicate-evaluation-context)
-34. [Supply Chain Predicate Enforcement](#30-supply-chain-predicate-enforcement)
-35. [Failure Semantics](#31-failure-semantics)
-36. [Conformance Checklist](#32-conformance-checklist)
-37. [Mandatory Test Vectors](#33-mandatory-test-vectors)
-38. [Reference Implementations and Verification](#34-reference-implementations-and-verification)
-39. [Explicit Dependencies](#35-explicit-dependencies)
-40. [Security Considerations](#36-security-considerations)
+15. [EnforcementOutcome Artefact](#15-enforcementoutcome-artefact)
+16. [Structural Invalidation of Override Attempts](#16-structural-invalidation-of-override-attempts)
+17. [Custody Predicate Integration](#17-custody-predicate-integration)
+18. [Temporal Freshness and Monotonicity](#18-temporal-freshness-and-monotonicity)
+19. [Session Binding](#19-session-binding)
+20. [Consent Consumption](#20-consent-consumption)
+21. [Policy Consumption and Immutability](#21-policy-consumption-and-immutability)
+22. [Runtime Attestation Consumption](#22-runtime-attestation-consumption)
+23. [SafePrompt Consumption](#23-safeprompt-consumption)
+24. [Ledger Continuity Enforcement](#24-ledger-continuity-enforcement)
+25. [Lockout and Backoff](#25-lockout-and-backoff)
+26. [Predicate Dependency Graph and Evaluation Ordering](#26-predicate-dependency-graph-and-evaluation-ordering)
+27. [Transport Security Requirements](#27-transport-security-requirements)
+28. [Error Surface Discipline](#28-error-surface-discipline)
+29. [Predicate Evaluation Context](#29-predicate-evaluation-context)
+30. [Supply Chain Predicate Enforcement](#30-supply-chain-predicate-enforcement)
+31. [Failure Semantics](#31-failure-semantics)
+32. [Conformance Checklist](#32-conformance-checklist)
+33. [Mandatory Test Vectors](#33-mandatory-test-vectors)
+34. [Reference Implementations and Verification](#34-reference-implementations-and-verification)
+35. [Security Considerations](#35-security-considerations)
 
-41. [Annexes](#annexes)
-   - [Annex A — Reference Evaluation Order](#annex-a--reference-evaluation-order-non-normative)
-   - [Annex B — Replay Guard Reference Logic](#annex-b--replay-guard-reference-logic-reference)
-   - [Annex C — Lockout State Machine](#annex-c--lockout-state-machine-reference)
-   - [Annex D — AdmissionContext Schema](#annex-d--admissioncontext-schema-reference)
-   - [Annex E — PredicateResult Schema](#annex-e--predicateresult-schema-reference)
-   - [Annex F — Predicate Evaluation Flow](#annex-f--predicate-evaluation-flow-reference)
-   - [Annex G — Bootstrap Mode State Machine](#annex-g--bootstrap-mode-state-machine-reference)
-   - [Annex H — Action Class Escalation Logic](#annex-h--action-class-escalation-logic-reference)
-   - [Annex I — Behavioural Admissibility Rules](#annex-i--behavioural-admissibility-rules-bar-evaluation-reference)
-   - [Annex J — Additional Custody Predicates](#annex-j--additional-custody-predicates-normative)
-   - [Annex K — Privacy Policy Enforcement](#annex-k--privacy-policy-enforcement-reference)
-   - [Annex L — Tick Freshness and Monotonicity Validation](#annex-l--tick-freshness-and-monotonicity-validation-reference)
-   - [Annex M — Attestation Validation and Drift Handling](#annex-m--attestation-validation-and-drift-handling-reference)
-   - [Annex N — Ledger Continuity Validation](#annex-n--ledger-continuity-validation-reference)
-   - [Annex O — Policy Rollback Detection](#annex-o--policy-rollback-detection-reference)
-   - [Annex P — Consent Validation and Expiry](#annex-p--consent-validation-and-expiry-reference)
-   - [Annex Q — Session and Exporter Validation](#annex-q--session-and-exporter-validation-reference)
-   - [Annex R — EnforcementOutcome Production (Reference)](#annex-r--enforcementoutcome-production-reference)
-   - [Annex RS — Session Resumption Enforcement (Normative, Optional)](#annex-rs--session-resumption-enforcement-normative-optional)
-   - [Annex S — Complete Evaluation Flow Example](#annex-s--complete-evaluation-flow-example-reference)
-   - [Annex T — Performance Monitoring and Budget Enforcement](#annex-t--performance-monitoring-and-budget-enforcement-reference)
-   - [Annex U — Integration Test Scenarios](#annex-u--integration-test-scenarios-reference)
-   - [Annex V — Deployment Checklist](#annex-v--deployment-checklist-reference)
-   - [Annex W — Operational Metrics and Monitoring](#annex-w--operational-metrics-and-monitoring-reference)
-   - [Annex X — Migration Guide](#annex-x--migration-guide-consolidating-enforcement-into-pqsec-reference)
-   - [Annex Y — FAQ for Implementers](#annex-y--faq-for-implementers-reference)
-
-42. [Changelog](#changelog)
-43. [Acknowledgements](#37-acknowledgements)
+    [Annexes](#annexes)
+    [Changelog](#changelog)
+36. [Acknowledgements](#36-acknowledgements)
 
 ---
 
@@ -249,11 +237,38 @@ PQSEC enforcement is refusal based. PQSEC does not grant authority.
 
 | Specification | Minimum Version | Purpose |
 |---------------|-----------------|---------|
-| PQSF | ≥ 2.0.2 | Canonical encoding for all artefacts |
-| Epoch Clock | ≥ 2.1.1 | Time artefact verification and freshness |
-| PQVL | ≥ 1.0.3 | Runtime attestation consumption (when valid_runtime required) |
+| PQSF | ≥ 2.0.2 | Canonical encoding, cryptographic profiles, and artefact grammars |
+| Epoch Clock | ≥ 2.0.0 | Verifiable time artefacts, freshness, and monotonicity enforcement |
+| PQVL | ≥ 1.0.3 | Runtime attestation consumption (when valid_runtime is required) |
 
-PQSEC consumes artefacts produced by other PQ specifications but does not depend on their enforcement logic. All enforcement is consolidated within PQSEC.
+Implementations MAY evaluate using earlier versions, but MUST NOT claim conformance while below the stated minimums.
+
+PQSEC consumes artefacts produced by other specifications but does not depend on their enforcement logic.  
+All enforcement is consolidated exclusively within PQSEC.
+
+### Integration Note: Dependency vs Annex Consumption
+
+PQSEC declares dependencies only on producing specifications whose artefacts
+are required for enforcement. These dependencies establish minimum version
+compatibility and define the authoritative sources of artefact structure,
+canonical encoding rules, and semantic meaning.
+
+Annexes referenced from producing specifications (for example PQSF Annexes)
+are **not independent dependencies**. They are subordinate components of their
+parent specification and are consumed only when the corresponding predicates
+are explicitly enabled by policy or enforcement configuration.
+
+Accordingly:
+
+- Annex references appear **only in integration and predicate prose**, where
+  their artefacts are consumed.
+- Annexes MUST NOT be listed as standalone dependencies.
+- Listing annexes separately would incorrectly imply independent versioning,
+  independent authority, or optional enforcement paths.
+
+PQSEC consumes annex-defined artefacts strictly as evidence inputs under the
+authority of their parent specification. All enforcement, refusal, escalation,
+and lockout semantics remain exclusively defined by PQSEC.
 
 ---
 
@@ -1638,49 +1653,7 @@ Unverifiable conformance claims MUST be treated as non-conformant.
 
 ---
 
-## 35. Explicit Dependencies
-
-PQSEC depends on producing specifications for artefact structure and
-semantics only. PQSEC does not depend on external enforcement logic.
-All enforcement is consolidated within PQSEC.
-
-Minimum required versions:
-
-* **Epoch Clock ≥ 2.1.1**  
-  Provides verifiable time artefacts, monotonicity guarantees, and
-  freshness semantics. All Authoritative operations depend on valid
-  Epoch Clock ticks.
-
-* **PQSF — Post-Quantum Security Framework ≥ 2.0.2**  
-  Provides canonical encoding rules, cryptographic suite indirection,
-  deterministic artefact grammars, and evidence-only protocol
-  primitives.
-
-  When corresponding predicates are enabled by policy or enforcement
-  configuration, PQSEC consumes the following PQSF annexes:
-
-  * **Annex W** — Site Policy Overlay  
-    (policy discovery and policy key evidence)
-
-  * **Annex X** — Transport and Session Binding Overlay  
-    (exporter-bound session evidence)
-
-  * **Annex Y** — Preflight Interaction Binding  
-    (preflight terms, transcript commitments, and bind receipts)
-
-  * **Annex Z** — Optional Presence and Liveness Evidence  
-    (PresenceProof artefacts)
-
-  * **Annex AA** — Governance Metadata Artefact  
-    (descriptive governance evidence)
-
-  * **Annex AB** — Delegation Evidence Artefacts  
-    (DelegationGrant and DelegationRevocation)
-
-
----
-
-## 36. Security Considerations
+## 35. Security Considerations
 
 1. Determinism is mandatory. Non-determinism introduces bypass vectors.
 2. Fail-closed enforcement is required.
@@ -3162,7 +3135,7 @@ unless explicitly enabled by policy.
 
 ---
 
-## 37. Acknowledgements
+## 36. Acknowledgements
 
 PQSEC synthesizes enforcement patterns from:
 - Zero-trust security architectures (NIST SP 800-207)
